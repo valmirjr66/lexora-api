@@ -1,0 +1,19 @@
+.next
+**/*.db
+yarn-error.*
+.env
+
+**/node_modules
+**/dist
+**/build
+**/storage
+
+# MongoDB
+**/data
+
+# Jest coverage report
+**/coverage
+
+# GCP files
+gcp-credentials.json
+token.json

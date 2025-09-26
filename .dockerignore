@@ -1,0 +1,13 @@
+Dockerfile
+.dockerignore
+docker-compose
+README.md
+.vscode
+.git
+data
+dist
+coverage
+node_modules
+.gitignore
+.eslintrc.js
+.prettierrc.json
