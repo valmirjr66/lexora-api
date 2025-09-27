@@ -19,7 +19,7 @@ export default class ScriptService {
     constructor(
         @InjectModel(Script.name)
         private readonly scriptModel: Model<Script>,
-        @InjectModel(Credential.name)
+        @InjectModel(ScriptBlock.name)
         private readonly scriptBlockModel: Model<ScriptBlock>,
     ) {}
 
