@@ -13,6 +13,7 @@ export default class GetScriptResponseModel {
         public id: string,
         public userId: string,
         public title: string,
+        public description: string,
         public blocks: GetScriptBlockResponseModel[],
         public createdAt: Date,
         public updatedAt: Date,

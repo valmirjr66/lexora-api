@@ -49,6 +49,7 @@ export default class ScriptService {
                 script._id.toString(),
                 script.userId.toString(),
                 script.title,
+                script.description,
                 scriptBlocks.map(
                     (block) =>
                         new GetScriptBlockResponseModel(
@@ -120,6 +121,7 @@ export default class ScriptService {
                 _id: new mongoose.Types.ObjectId(),
                 userId: new mongoose.Types.ObjectId(model.userId),
                 title: model.title,
+                description: model.description,
                 createdAt: new Date(),
                 updatedAt: new Date(),
             });
@@ -157,6 +159,7 @@ export default class ScriptService {
 
             await this.scriptModel.findByIdAndUpdate(script._id, {
                 title: model.title,
+                description: model.description,
                 updatedAt: new Date(),
             });
 
@@ -197,6 +200,7 @@ export default class ScriptService {
                             script._id.toString(),
                             script.userId.toString(),
                             script.title,
+                            script.description,
                             scriptBlocks
                                 .filter((block) =>
                                     script.blockIds

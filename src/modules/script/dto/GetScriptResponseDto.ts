@@ -24,6 +24,9 @@ export default class GetScriptResponseDto {
     public title: string;
 
     @ApiProperty()
+    public description: string;
+
+    @ApiProperty()
     public blocks: GetScriptBlockResponseDto[];
 
     @ApiProperty()

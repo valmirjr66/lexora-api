@@ -6,4 +6,7 @@ export default class InsertScriptRequestDto {
 
     @ApiProperty({ required: true })
     public title: string;
+
+    @ApiProperty({ required: true })
+    public description: string;
 }

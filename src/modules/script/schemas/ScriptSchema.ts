@@ -13,6 +13,9 @@ export class Script extends BaseSchema {
     title: string;
 
     @Prop({ required: true })
+    description: string;
+
+    @Prop({ required: true })
     blockIds: mongoose.Types.ObjectId[];
 }
 
