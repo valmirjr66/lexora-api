@@ -10,6 +10,7 @@ import {
     Put,
 } from '@nestjs/common';
 import {
+    ApiBadRequestResponse,
     ApiConflictResponse,
     ApiCreatedResponse,
     ApiInternalServerErrorResponse,
@@ -21,9 +22,11 @@ import {
 import { RESPONSE_DESCRIPTIONS } from 'src/constants';
 import ScriptService from './ScriptService';
 import GetScriptResponseDto from './dto/GetScriptResponseDto';
+import InsertScriptBlockRequestDto from './dto/InsertScriptBlockRequestDto';
 import InsertScriptRequestDto from './dto/InsertScriptRequestDto';
 import ListScriptsResponseDto from './dto/ListScriptsResponseDto';
 import UpdateScriptRequestDto from './dto/UpdateScriptRequestDto';
+import UpdateScriptBlockRequestModel from './model/UpdateScriptBlockRequestModel';
 
 @ApiTags('Script')
 @Controller('scripts')
@@ -59,6 +62,7 @@ export default class ScriptController {
     @Post()
     @ApiCreatedResponse({ description: RESPONSE_DESCRIPTIONS.CREATED })
     @ApiConflictResponse({ description: RESPONSE_DESCRIPTIONS.CONFLICT })
+    @ApiBadRequestResponse({ description: RESPONSE_DESCRIPTIONS.BAD_REQUEST })
     @ApiInternalServerErrorResponse({
         description: RESPONSE_DESCRIPTIONS.INTERNAL_SERVER_ERROR,
     })
@@ -79,6 +83,7 @@ export default class ScriptController {
     @Put('/:id')
     @ApiOkResponse({ description: RESPONSE_DESCRIPTIONS.OK })
     @ApiConflictResponse({ description: RESPONSE_DESCRIPTIONS.CONFLICT })
+    @ApiBadRequestResponse({ description: RESPONSE_DESCRIPTIONS.BAD_REQUEST })
     @ApiInternalServerErrorResponse({
         description: RESPONSE_DESCRIPTIONS.INTERNAL_SERVER_ERROR,
     })
@@ -101,5 +106,52 @@ export default class ScriptController {
     async listScript(): Promise<ListScriptsResponseDto> {
         const response = await this.scriptService.listScripts();
         return response;
+    }
+
+    @Post('/:id/blocks')
+    @ApiCreatedResponse({ description: RESPONSE_DESCRIPTIONS.CREATED })
+    @ApiNotFoundResponse({ description: RESPONSE_DESCRIPTIONS.NOT_FOUND })
+    @ApiBadRequestResponse({ description: RESPONSE_DESCRIPTIONS.BAD_REQUEST })
+    @ApiInternalServerErrorResponse({
+        description: RESPONSE_DESCRIPTIONS.INTERNAL_SERVER_ERROR,
+    })
+    async postScriptBlock(
+        @Param('id') id: string,
+        @Body() body: InsertScriptBlockRequestDto,
+    ): Promise<{ id: string }> {
+        const response = await this.scriptService.insertScriptBlock({
+            ...body,
+            scriptId: id,
+        });
+        return response;
+    }
+
+    @Put('/:id/blocks/:blockId')
+    @ApiOkResponse({
+        description: RESPONSE_DESCRIPTIONS.OK,
+    })
+    @ApiNotFoundResponse({ description: RESPONSE_DESCRIPTIONS.NOT_FOUND })
+    @ApiBadRequestResponse({ description: RESPONSE_DESCRIPTIONS.BAD_REQUEST })
+    @ApiInternalServerErrorResponse({
+        description: RESPONSE_DESCRIPTIONS.INTERNAL_SERVER_ERROR,
+    })
+    async updateScriptBlock(
+        @Param('blockId') blockId: string,
+        @Body() body: UpdateScriptBlockRequestModel,
+    ): Promise<void> {
+        await this.scriptService.updateScriptBlock({ ...body, blockId });
+    }
+
+    @Delete('/:id/blocks/:blockId')
+    @ApiOkResponse({ description: RESPONSE_DESCRIPTIONS.OK })
+    @ApiNotFoundResponse({ description: RESPONSE_DESCRIPTIONS.NOT_FOUND })
+    @ApiInternalServerErrorResponse({
+        description: RESPONSE_DESCRIPTIONS.INTERNAL_SERVER_ERROR,
+    })
+    async deleteScriptBlock(
+        @Param('id') scriptId: string,
+        @Param('blockId') blockId: string,
+    ): Promise<void> {
+        await this.scriptService.deleteScriptBlock(scriptId, blockId);
     }
 }
