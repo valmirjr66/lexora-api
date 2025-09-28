@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import { MongoClient } from 'mongodb';
 import * as path from 'path';
 import askForConfirmation from './AskForConfirmation';
-import { DEFAULT_PASSWORD, DEFAULT_USER_EMAIL } from './Utils';
+import { DEFAULT_PASSWORD, DEFAULT_USER_EMAIL, SCRIPT_1 } from './Utils';
 
 dotenv.config();
 
@@ -58,6 +58,43 @@ async function updateUserProfilePicture(
     console.log(`Updated profile picture for user with id: ${userId}`);
 }
 
+async function insertScriptAndItsBlocks(
+    userId: string,
+    title: string,
+    description: string,
+    blocks: { type: string; content: string }[],
+): Promise<string> {
+    console.log(
+        `Inserting script titled: ${title} for user with id: ${userId}`,
+    );
+
+    const { data: scriptData } = await axios.post(`${API_URL}/scripts`, {
+        userId,
+        title,
+        description,
+    });
+
+    console.log(`Inserted script with id: ${scriptData.id}`);
+
+    console.log(`Inserting blocks for script with id: ${scriptData.id}`);
+
+    for (const block of blocks) {
+        const { data: blockData } = await axios.post(
+            `${API_URL}/script/${scriptData.id}/blocks`,
+            {
+                type: block.type,
+                content: block.content,
+            },
+        );
+
+        console.log(`Inserted block with id: ${blockData.id}`);
+    }
+
+    console.log(`All blocks inserted for script with id: ${scriptData.id}`);
+
+    return scriptData.id as string;
+}
+
 async function resetMongoDB() {
     if (IS_PROD) {
         await askForConfirmation(
@@ -106,6 +143,15 @@ async function resetMongoDB() {
         );
 
         await updateUserProfilePicture(userId, userPicPath);
+
+        console.log('Inserting scripts');
+
+        await insertScriptAndItsBlocks(
+            userId,
+            SCRIPT_1.title,
+            SCRIPT_1.description,
+            SCRIPT_1.blocks,
+        );
 
         console.log('Database reset process completed successfully.');
     } catch (error) {
