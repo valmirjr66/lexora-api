@@ -8,6 +8,7 @@ import {
     Param,
     Post,
     Put,
+    Query,
 } from '@nestjs/common';
 import {
     ApiBadRequestResponse,
@@ -103,8 +104,10 @@ export default class ScriptController {
     @ApiInternalServerErrorResponse({
         description: RESPONSE_DESCRIPTIONS.INTERNAL_SERVER_ERROR,
     })
-    async listScript(): Promise<ListScriptsResponseDto> {
-        const response = await this.scriptService.listScripts();
+    async listScript(
+        @Query('userId') userId: string,
+    ): Promise<ListScriptsResponseDto> {
+        const response = await this.scriptService.listScripts(userId);
         return response;
     }
 
