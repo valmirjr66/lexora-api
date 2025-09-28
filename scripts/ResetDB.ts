@@ -80,7 +80,7 @@ async function insertScriptAndItsBlocks(
 
     for (const block of blocks) {
         const { data: blockData } = await axios.post(
-            `${API_URL}/script/${scriptData.id}/blocks`,
+            `${API_URL}/scripts/${scriptData.id}/blocks`,
             {
                 type: block.type,
                 content: block.content,
