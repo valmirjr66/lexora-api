@@ -38,7 +38,7 @@ export default class ScriptService {
             }
 
             const scriptBlocks = await this.scriptBlockModel
-                .find({ id: { $in: script.blockIds } })
+                .find({ _id: { $in: script.blockIds } })
                 .exec()
                 .then((docs) => docs.map((doc) => doc.toObject()));
 
@@ -190,11 +190,13 @@ export default class ScriptService {
             const allBlockIds = scripts.flatMap((script) => script.blockIds);
 
             const scriptBlocks = await this.scriptBlockModel
-                .find({ id: { $in: allBlockIds } })
+                .find({ _id: { $in: allBlockIds } })
                 .exec()
                 .then((docs) => docs.map((doc) => doc.toObject()));
 
-            this.logger.log(`Found ${scripts.length} scripts`);
+            this.logger.log(
+                `Found ${scripts.length} scripts and ${scriptBlocks.length} blocks`,
+            );
 
             return new ListScriptsResponseModel(
                 scripts.map(
