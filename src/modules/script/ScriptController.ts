@@ -105,7 +105,7 @@ export default class ScriptController {
         description: RESPONSE_DESCRIPTIONS.INTERNAL_SERVER_ERROR,
     })
     async listScript(
-        @Query('userId') userId: string,
+        @Query('userId') userId?: string,
     ): Promise<ListScriptsResponseDto> {
         const response = await this.scriptService.listScripts(userId);
         return response;

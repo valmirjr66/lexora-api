@@ -170,12 +170,15 @@ export default class ScriptService {
         }
     }
 
-    async listScripts(userId: string): Promise<ListScriptsResponseModel> {
+    async listScripts(userId?: string): Promise<ListScriptsResponseModel> {
         this.logger.log('Listing all scripts');
+
+        const filter: Record<string, any> = {};
+        if (userId) filter['userId'] = new mongoose.Types.ObjectId(userId);
 
         try {
             const scripts = await this.scriptModel
-                .find({ userId: new mongoose.Types.ObjectId(userId) })
+                .find({ ...filter })
                 .exec()
                 .then((docs) => docs.map((doc) => doc.toObject()));
 
