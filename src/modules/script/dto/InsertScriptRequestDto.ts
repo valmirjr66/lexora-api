@@ -9,7 +9,11 @@ export default class InsertScriptRequestDto {
     @ApiProperty({ required: true })
     public title: string;
 
-    @ApiProperty({ required: true, enum: SCRIPT_TYPES, default: 'TECHNICAL_INTERVIEW' })
+    @ApiProperty({
+        required: true,
+        enum: SCRIPT_TYPES,
+        default: 'TECHNICAL_INTERVIEW',
+    })
     public type: ScriptType;
 
     @ApiPropertyOptional()

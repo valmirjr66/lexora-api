@@ -6,5 +6,5 @@ export default class UpdateScriptRequestModel {
         public title?: string,
         public type?: ScriptType,
         public description?: string,
-    ) { }
+    ) {}
 }

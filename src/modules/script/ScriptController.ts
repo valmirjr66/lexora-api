@@ -21,6 +21,7 @@ import {
     ApiTags,
 } from '@nestjs/swagger';
 import { RESPONSE_DESCRIPTIONS } from 'src/constants';
+import ScriptBlockService from './ScriptBlockService';
 import ScriptService from './ScriptService';
 import GetScriptResponseDto from './dto/GetScriptResponseDto';
 import InsertScriptBlockRequestDto from './dto/InsertScriptBlockRequestDto';
@@ -33,7 +34,10 @@ import UpdateScriptRequestDto from './dto/UpdateScriptRequestDto';
 @ApiTags('Script')
 @Controller('scripts')
 export default class ScriptController {
-    constructor(private readonly scriptService: ScriptService) {}
+    constructor(
+        private readonly scriptService: ScriptService,
+        private readonly scriptBlockService: ScriptBlockService,
+    ) {}
 
     @Get('/:id')
     @ApiOkResponse({
@@ -124,7 +128,7 @@ export default class ScriptController {
     async listScriptBlocks(
         @Param('id') id: string,
     ): Promise<ListScriptBlocksResponseDto> {
-        const response = await this.scriptService.listScriptBlocks(id);
+        const response = await this.scriptBlockService.listByScriptId(id);
         return response;
     }
 
@@ -139,7 +143,7 @@ export default class ScriptController {
         @Param('id') id: string,
         @Body() body: InsertScriptBlockRequestDto,
     ): Promise<{ id: string }> {
-        const response = await this.scriptService.insertScriptBlock({
+        const response = await this.scriptBlockService.insert({
             ...body,
             scriptId: id,
         });
@@ -159,7 +163,7 @@ export default class ScriptController {
         @Param('blockId') blockId: string,
         @Body() body: UpdateScriptBlockRequestDto,
     ): Promise<void> {
-        await this.scriptService.updateScriptBlock({ ...body, blockId });
+        await this.scriptBlockService.update({ ...body, blockId });
     }
 
     @Delete('/:id/blocks/:blockId')
@@ -172,6 +176,6 @@ export default class ScriptController {
         @Param('id') scriptId: string,
         @Param('blockId') blockId: string,
     ): Promise<void> {
-        await this.scriptService.deleteScriptBlock(scriptId, blockId);
+        await this.scriptBlockService.delete(scriptId, blockId);
     }
 }

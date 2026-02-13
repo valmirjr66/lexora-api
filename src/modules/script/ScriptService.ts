@@ -1,16 +1,11 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
-import GetScriptResponseModel, {
-    GetScriptBlockResponseModel,
-} from './model/GetScriptResponseModel';
-import InsertScriptBlockRequestModel from './model/InsertScriptBlockRequestModel';
+import GetScriptResponseModel from './model/GetScriptResponseModel';
 import InsertScriptRequestModel from './model/InsertScriptRequestModel';
-import ListScriptBlocksResponseModel from './model/ListScriptBlocksResponseModel';
 import ListScriptsResponseModel from './model/ListScriptsResponseModel';
-import UpdateScriptBlockRequestModel from './model/UpdateScriptBlockRequestModel';
 import UpdateScriptRequestModel from './model/UpdateScriptRequestModel';
-import { ScriptBlock } from './schemas/ScriptBlockSchema';
+import ScriptBlockService from './ScriptBlockService';
 import { Script } from './schemas/ScriptSchema';
 
 @Injectable()
@@ -20,9 +15,8 @@ export default class ScriptService {
     constructor(
         @InjectModel(Script.name)
         private readonly scriptModel: Model<Script>,
-        @InjectModel(ScriptBlock.name)
-        private readonly scriptBlockModel: Model<ScriptBlock>,
-    ) { }
+        private readonly scriptBlockService: ScriptBlockService,
+    ) {}
 
     async getScriptById(id: string): Promise<GetScriptResponseModel | null> {
         this.logger.log(`Fetching script by id: ${id}`);
@@ -38,10 +32,9 @@ export default class ScriptService {
                 return null;
             }
 
-            const scriptBlocks = await this.scriptBlockModel
-                .find({ _id: { $in: script.blockIds } })
-                .exec()
-                .then((docs) => docs.map((doc) => doc.toObject()));
+            const blocks = await this.scriptBlockService.findByIds(
+                script.blockIds,
+            );
 
             this.logger.log(`Script fetched for id: ${id}`);
             this.logger.debug(`Script details: ${JSON.stringify(script)}`);
@@ -53,20 +46,7 @@ export default class ScriptService {
                 script.type,
                 script.version,
                 script.description,
-                scriptBlocks.map(
-                    (block) =>
-                        new GetScriptBlockResponseModel(
-                            block._id.toString(),
-                            block.scriptId.toString(),
-                            block.type,
-                            block.content,
-                            block.objective,
-                            block.expectedResponse,
-                            block.commonMistakes,
-                            block.createdAt,
-                            block.updatedAt,
-                        ),
-                ),
+                blocks,
                 script.createdAt,
                 script.updatedAt,
             );
@@ -90,9 +70,7 @@ export default class ScriptService {
                 throw new NotFoundException();
             }
 
-            await this.scriptBlockModel.deleteMany({
-                _id: { $in: script.blockIds },
-            });
+            await this.scriptBlockService.deleteByScriptId(script.blockIds);
 
             this.logger.log(`Blocks deleted for script id: ${id}`);
 
@@ -207,13 +185,11 @@ export default class ScriptService {
 
             const allBlockIds = scripts.flatMap((script) => script.blockIds);
 
-            const scriptBlocks = await this.scriptBlockModel
-                .find({ _id: { $in: allBlockIds } })
-                .exec()
-                .then((docs) => docs.map((doc) => doc.toObject()));
+            const allBlocks =
+                await this.scriptBlockService.findByIds(allBlockIds);
 
             this.logger.log(
-                `Found ${scripts.length} scripts and ${scriptBlocks.length} blocks`,
+                `Found ${scripts.length} scripts and ${allBlocks.length} blocks`,
             );
 
             return new ListScriptsResponseModel(
@@ -226,26 +202,11 @@ export default class ScriptService {
                             script.type,
                             script.version,
                             script.description,
-                            scriptBlocks
-                                .filter((block) =>
-                                    script.blockIds
-                                        .map((blockId) => blockId.toString())
-                                        .includes(block._id.toString()),
-                                )
-                                .map(
-                                    (block) =>
-                                        new GetScriptBlockResponseModel(
-                                            block._id.toString(),
-                                            block.scriptId.toString(),
-                                            block.type,
-                                            block.content,
-                                            block.objective,
-                                            block.expectedResponse,
-                                            block.commonMistakes,
-                                            block.createdAt,
-                                            block.updatedAt,
-                                        ),
-                                ),
+                            allBlocks.filter((block) =>
+                                script.blockIds
+                                    .map((blockId) => blockId.toString())
+                                    .includes(block.id),
+                            ),
                             script.createdAt,
                             script.updatedAt,
                         ),
@@ -253,207 +214,6 @@ export default class ScriptService {
             );
         } catch (error) {
             this.logger.error(`Error listing scripts: ${error}`);
-            throw error;
-        }
-    }
-
-    async listScriptBlocks(
-        scriptId: string,
-    ): Promise<ListScriptBlocksResponseModel> {
-        this.logger.log(`Listing blocks for script id: ${scriptId}`);
-
-        try {
-            const script = await this.scriptModel
-                .findById(new mongoose.Types.ObjectId(scriptId))
-                .exec()
-                .then((doc) => doc?.toObject());
-
-            if (!script) {
-                this.logger.error(`Script with id ${scriptId} not found`);
-                throw new NotFoundException();
-            }
-
-            const scriptBlocks = await this.scriptBlockModel
-                .find({ _id: { $in: script.blockIds } })
-                .exec()
-                .then((docs) => docs.map((doc) => doc.toObject()));
-
-            this.logger.log(
-                `Found ${scriptBlocks.length} blocks for script id: ${scriptId}`,
-            );
-
-            return new ListScriptBlocksResponseModel(
-                scriptBlocks.map(
-                    (block) =>
-                        new GetScriptBlockResponseModel(
-                            block._id.toString(),
-                            block.scriptId.toString(),
-                            block.type,
-                            block.content,
-                            block.objective,
-                            block.expectedResponse,
-                            block.commonMistakes,
-                            block.createdAt,
-                            block.updatedAt,
-                        ),
-                ),
-            );
-        } catch (error) {
-            this.logger.error(
-                `Error listing blocks for script id ${scriptId}: ${error}`,
-            );
-            throw error;
-        }
-    }
-
-    async insertScriptBlock(
-        model: InsertScriptBlockRequestModel,
-    ): Promise<{ id: string }> {
-        const {
-            scriptId,
-            type,
-            content,
-            objective,
-            expectedResponse,
-            commonMistakes,
-        } = model;
-
-        this.logger.log(`Inserting script block for script id: ${scriptId}`);
-
-        try {
-            const script = await this.scriptModel
-                .findById(new mongoose.Types.ObjectId(scriptId))
-                .exec()
-                .then((doc) => doc?.toObject());
-
-            if (!script) {
-                this.logger.error(`Script with id ${scriptId} not found`);
-                throw new NotFoundException();
-            }
-
-            const createdBlock = await this.scriptBlockModel.create({
-                _id: new mongoose.Types.ObjectId(),
-                scriptId: new mongoose.Types.ObjectId(scriptId),
-                type,
-                content,
-                objective,
-                expectedResponse,
-                commonMistakes,
-            });
-
-            this.logger.log(
-                `Script block created successfully with id ${createdBlock._id}`,
-            );
-
-            script.blockIds.push(createdBlock._id);
-
-            await this.scriptModel.findByIdAndUpdate(script._id, {
-                blockIds: script.blockIds,
-                updatedAt: new Date(),
-            });
-
-            this.logger.log(
-                `Script with id ${scriptId} updated with new block id ${createdBlock._id}`,
-            );
-
-            return { id: createdBlock.toObject()._id.toString() };
-        } catch (error) {
-            this.logger.error(
-                `Error inserting script block for script id ${scriptId}: ${error}`,
-            );
-            throw error;
-        }
-    }
-
-    async deleteScriptBlock(scriptId: string, blockId: string): Promise<void> {
-        this.logger.log(
-            `Removing script block with id ${blockId} from script id: ${scriptId}`,
-        );
-
-        try {
-            const script = await this.scriptModel
-                .findById(new mongoose.Types.ObjectId(scriptId))
-                .exec()
-                .then((doc) => doc?.toObject());
-
-            if (!script) {
-                this.logger.error(`Script with id ${scriptId} not found`);
-                throw new NotFoundException();
-            }
-
-            if (!script.blockIds.map((id) => id.toString()).includes(blockId)) {
-                this.logger.error(
-                    `Block with id ${blockId} not found in script id ${scriptId}`,
-                );
-                throw new NotFoundException();
-            }
-
-            await this.scriptBlockModel.deleteOne({
-                _id: new mongoose.Types.ObjectId(blockId),
-            });
-
-            this.logger.log(`Block with id ${blockId} deleted successfully`);
-
-            script.blockIds = script.blockIds.filter(
-                (id) => id.toString() !== blockId,
-            );
-
-            await this.scriptModel.findByIdAndUpdate(script._id, {
-                blockIds: script.blockIds,
-                updatedAt: new Date(),
-            });
-
-            this.logger.log(
-                `Script with id ${scriptId} updated successfully after removing block id ${blockId}`,
-            );
-        } catch (error) {
-            this.logger.error(
-                `Error removing block with id ${blockId} from script id ${scriptId}: ${error}`,
-            );
-            throw error;
-        }
-    }
-
-    async updateScriptBlock(
-        model: UpdateScriptBlockRequestModel,
-    ): Promise<void> {
-        this.logger.log(`Updating script block with id: ${model.blockId}`);
-
-        try {
-            const block = await this.scriptBlockModel
-                .findById(new mongoose.Types.ObjectId(model.blockId))
-                .exec()
-                .then((doc) => doc?.toObject());
-
-            if (!block) {
-                this.logger.error(`Block with id ${model.blockId} not found`);
-                throw new NotFoundException();
-            }
-
-            const updatePayload: Record<string, any> = {};
-
-            if (model.type !== undefined) updatePayload.type = model.type;
-            if (model.content !== undefined)
-                updatePayload.content = model.content;
-            if (model.objective !== undefined)
-                updatePayload.objective = model.objective;
-            if (model.expectedResponse !== undefined)
-                updatePayload.expectedResponse = model.expectedResponse;
-            if (model.commonMistakes !== undefined)
-                updatePayload.commonMistakes = model.commonMistakes;
-
-            await this.scriptBlockModel.findByIdAndUpdate(
-                block._id,
-                updatePayload,
-            );
-
-            this.logger.log(
-                `Block with id ${model.blockId} updated successfully`,
-            );
-        } catch (error) {
-            this.logger.error(
-                `Error updating block with id ${model.blockId}: ${error}`,
-            );
             throw error;
         }
     }
