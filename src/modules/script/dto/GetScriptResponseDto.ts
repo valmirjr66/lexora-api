@@ -1,16 +1,34 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { SCRIPT_BLOCK_TYPES } from 'src/constants';
-import { ScriptBlockType } from 'src/types/script';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { SCRIPT_BLOCK_TYPES, SCRIPT_TYPES } from 'src/constants';
+import { ScriptBlockType, ScriptType } from 'src/types/script';
 
 export class GetScriptBlockResponseDto {
     @ApiProperty()
     public id: string;
+
+    @ApiProperty()
+    public scriptId: string;
 
     @ApiProperty({ enum: SCRIPT_BLOCK_TYPES })
     public type: ScriptBlockType;
 
     @ApiProperty()
     public content: string;
+
+    @ApiPropertyOptional()
+    public objective?: string;
+
+    @ApiPropertyOptional()
+    public expectedResponse?: string;
+
+    @ApiPropertyOptional()
+    public commonMistakes?: string;
+
+    @ApiProperty()
+    public createdAt: Date;
+
+    @ApiProperty()
+    public updatedAt: Date;
 }
 
 export default class GetScriptResponseDto {
@@ -18,15 +36,21 @@ export default class GetScriptResponseDto {
     public id: string;
 
     @ApiProperty()
-    public userId: string;
+    public owner: string;
 
     @ApiProperty()
     public title: string;
 
-    @ApiProperty()
-    public description: string;
+    @ApiProperty({ enum: SCRIPT_TYPES })
+    public type: ScriptType;
 
     @ApiProperty()
+    public version: number;
+
+    @ApiPropertyOptional()
+    public description?: string;
+
+    @ApiProperty({ type: [GetScriptBlockResponseDto] })
     public blocks: GetScriptBlockResponseDto[];
 
     @ApiProperty()

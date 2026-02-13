@@ -25,9 +25,9 @@ async function bootstrap() {
     app.setGlobalPrefix('api').useGlobalPipes(new ValidationPipe());
 
     const config = new DocumentBuilder()
-        .setTitle('Lexora Assistant API')
+        .setTitle('Evalo API')
         .setDescription(
-            "This is a RESTful API created to interface with Lexora's intelligence.",
+            'RESTful API for evalo.ai — AI-guided job assessment processes.',
         )
         .setVersion('1.0')
         .build();

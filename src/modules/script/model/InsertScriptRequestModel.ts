@@ -1,7 +1,10 @@
+import { ScriptType } from 'src/types/script';
+
 export default class InsertScriptRequestModel {
     constructor(
-        public userId: string,
+        public owner: string,
         public title: string,
-        public description: string,
+        public type: ScriptType,
+        public description?: string,
     ) {}
 }

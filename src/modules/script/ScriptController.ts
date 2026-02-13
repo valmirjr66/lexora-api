@@ -25,9 +25,10 @@ import ScriptService from './ScriptService';
 import GetScriptResponseDto from './dto/GetScriptResponseDto';
 import InsertScriptBlockRequestDto from './dto/InsertScriptBlockRequestDto';
 import InsertScriptRequestDto from './dto/InsertScriptRequestDto';
+import ListScriptBlocksResponseDto from './dto/ListScriptBlocksResponseDto';
 import ListScriptsResponseDto from './dto/ListScriptsResponseDto';
+import UpdateScriptBlockRequestDto from './dto/UpdateScriptBlockRequestDto';
 import UpdateScriptRequestDto from './dto/UpdateScriptRequestDto';
-import UpdateScriptBlockRequestModel from './model/UpdateScriptBlockRequestModel';
 
 @ApiTags('Script')
 @Controller('scripts')
@@ -73,7 +74,7 @@ export default class ScriptController {
         const response = await this.scriptService.insertScript(body);
         if (response === 'existing title') {
             throw new HttpException(
-                'There is already a script with this title for this user',
+                'There is already a script with this title for this owner',
                 HttpStatus.CONFLICT,
             );
         } else {
@@ -104,10 +105,26 @@ export default class ScriptController {
     @ApiInternalServerErrorResponse({
         description: RESPONSE_DESCRIPTIONS.INTERNAL_SERVER_ERROR,
     })
-    async listScript(
-        @Query('userId') userId?: string,
+    async listScripts(
+        @Query('owner') owner?: string,
     ): Promise<ListScriptsResponseDto> {
-        const response = await this.scriptService.listScripts(userId);
+        const response = await this.scriptService.listScripts(owner);
+        return response;
+    }
+
+    @Get('/:id/blocks')
+    @ApiOkResponse({
+        description: RESPONSE_DESCRIPTIONS.OK,
+        type: ListScriptBlocksResponseDto,
+    })
+    @ApiNotFoundResponse({ description: RESPONSE_DESCRIPTIONS.NOT_FOUND })
+    @ApiInternalServerErrorResponse({
+        description: RESPONSE_DESCRIPTIONS.INTERNAL_SERVER_ERROR,
+    })
+    async listScriptBlocks(
+        @Param('id') id: string,
+    ): Promise<ListScriptBlocksResponseDto> {
+        const response = await this.scriptService.listScriptBlocks(id);
         return response;
     }
 
@@ -140,7 +157,7 @@ export default class ScriptController {
     })
     async updateScriptBlock(
         @Param('blockId') blockId: string,
-        @Body() body: UpdateScriptBlockRequestModel,
+        @Body() body: UpdateScriptBlockRequestDto,
     ): Promise<void> {
         await this.scriptService.updateScriptBlock({ ...body, blockId });
     }

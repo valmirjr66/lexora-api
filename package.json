@@ -1,7 +1,7 @@
 {
-  "name": "lexora.api",
+  "name": "evalo.api",
   "version": "1.0.0",
-  "description": "Lexora API",
+  "description": "Evalo API",
   "author": "Valmir Jr.",
   "private": true,
   "license": "UNLICENSED",

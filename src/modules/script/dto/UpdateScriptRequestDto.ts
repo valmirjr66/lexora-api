@@ -1,12 +1,14 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { SCRIPT_TYPES } from 'src/constants';
+import { ScriptType } from 'src/types/script';
 
 export default class UpdateScriptRequestDto {
-    @ApiProperty({ required: true })
-    public id: string;
+    @ApiPropertyOptional()
+    public title?: string;
 
-    @ApiProperty({ required: true })
-    public title: string;
+    @ApiPropertyOptional({ enum: SCRIPT_TYPES })
+    public type?: ScriptType;
 
-    @ApiProperty({ required: true })
-    public description: string;
+    @ApiPropertyOptional()
+    public description?: string;
 }

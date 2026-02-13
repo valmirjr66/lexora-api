@@ -11,8 +11,6 @@ export const RESPONSE_DESCRIPTIONS = {
     UNAUTHORIZED: 'Unauthorized',
 };
 
-export const SCRIPT_BLOCK_TYPES = [
-    'ok-nok',
-    'open-question',
-    'deep-knowledge',
-] as const;
+export const SCRIPT_BLOCK_TYPES = ['EVAL', 'OPEN', 'CODE'] as const;
+
+export const SCRIPT_TYPES = ['TECHNICAL_INTERVIEW'] as const;
