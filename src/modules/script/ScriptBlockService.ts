@@ -165,22 +165,13 @@ export default class ScriptBlockService {
                 throw new NotFoundException();
             }
 
-            const updatePayload: Record<string, any> = {};
-
-            if (model.type !== undefined) updatePayload.type = model.type;
-            if (model.content !== undefined)
-                updatePayload.content = model.content;
-            if (model.objective !== undefined)
-                updatePayload.objective = model.objective;
-            if (model.expectedResponse !== undefined)
-                updatePayload.expectedResponse = model.expectedResponse;
-            if (model.commonMistakes !== undefined)
-                updatePayload.commonMistakes = model.commonMistakes;
-
-            await this.scriptBlockModel.findByIdAndUpdate(
-                block._id,
-                updatePayload,
-            );
+            await this.scriptBlockModel.findByIdAndUpdate(block._id, {
+                type: model.type,
+                content: model.content,
+                objective: model.objective ?? null,
+                expectedResponse: model.expectedResponse ?? null,
+                commonMistakes: model.commonMistakes ?? null,
+            });
 
             this.logger.log(
                 `Block with id ${model.blockId} updated successfully`,

@@ -145,20 +145,16 @@ export default class ScriptService {
                 throw new NotFoundException();
             }
 
-            const updatePayload: Record<string, any> = {
-                updatedAt: new Date(),
+            await this.scriptModel.findByIdAndUpdate(script._id, {
+                title: model.title,
+                type: model.type,
+                description: model.description ?? null,
                 version: script.version + 1,
-            };
-
-            if (model.title !== undefined) updatePayload.title = model.title;
-            if (model.type !== undefined) updatePayload.type = model.type;
-            if (model.description !== undefined)
-                updatePayload.description = model.description;
-
-            await this.scriptModel.findByIdAndUpdate(script._id, updatePayload);
+                updatedAt: new Date(),
+            });
 
             this.logger.log(
-                `Script with id ${id} updated successfully to version ${updatePayload.version}`,
+                `Script with id ${id} updated successfully to version ${script.version + 1}`,
             );
         } catch (error) {
             this.logger.error(`Error updating script with id ${id}: ${error}`);
