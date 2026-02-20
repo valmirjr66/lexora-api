@@ -4,7 +4,7 @@ import { OccurrenceStatus } from 'src/types/occurrence';
 
 export default class UpdateOccurrenceRequestDto {
     @ApiProperty({ required: true })
-    public subjectName: string;
+    public applicantName: string;
 
     @ApiProperty({ required: true, enum: OCCURRENCE_STATUSES })
     public status: OccurrenceStatus;

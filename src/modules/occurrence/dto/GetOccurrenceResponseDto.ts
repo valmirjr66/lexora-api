@@ -13,7 +13,7 @@ export default class GetOccurrenceResponseDto {
     public scriptVersion: number;
 
     @ApiProperty()
-    public subjectName: string;
+    public applicantName: string;
 
     @ApiProperty({ enum: OCCURRENCE_STATUSES })
     public status: OccurrenceStatus;

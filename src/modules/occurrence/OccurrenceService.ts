@@ -56,7 +56,7 @@ export default class OccurrenceService {
     }
 
     async insert(model: InsertOccurrenceRequestModel): Promise<{ id: string }> {
-        const { scriptId, subjectName, transcriptRaw } = model;
+        const { scriptId, applicantName, transcriptRaw } = model;
 
         this.logger.log(`Inserting occurrence for script id: ${scriptId}`);
 
@@ -77,7 +77,7 @@ export default class OccurrenceService {
                 _id: new mongoose.Types.ObjectId(),
                 scriptId: new mongoose.Types.ObjectId(scriptId),
                 scriptVersion: script.version,
-                subjectName,
+                applicantName,
                 status: 'CREATED',
                 transcriptRaw,
                 startedAt: now,
@@ -115,7 +115,7 @@ export default class OccurrenceService {
             }
 
             await this.occurrenceModel.findByIdAndUpdate(occurrence._id, {
-                subjectName: model.subjectName,
+                applicantName: model.applicantName,
                 status: model.status,
                 transcriptRaw: model.transcriptRaw ?? null,
                 outputId: model.outputId
@@ -181,7 +181,7 @@ export default class OccurrenceService {
             occ._id.toString(),
             occ.scriptId.toString(),
             occ.scriptVersion,
-            occ.subjectName,
+            occ.applicantName,
             occ.status,
             occ.transcriptRaw,
             occ.outputId?.toString(),

@@ -14,7 +14,7 @@ export class Occurrence extends BaseSchema {
     scriptVersion: number;
 
     @Prop({ required: true })
-    subjectName: string;
+    applicantName: string;
 
     @Prop({ required: true, default: 'CREATED' })
     status: OccurrenceStatus;

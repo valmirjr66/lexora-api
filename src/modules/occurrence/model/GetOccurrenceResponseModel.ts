@@ -5,7 +5,7 @@ export default class GetOccurrenceResponseModel {
         public id: string,
         public scriptId: string,
         public scriptVersion: number,
-        public subjectName: string,
+        public applicantName: string,
         public status: OccurrenceStatus,
         public transcriptRaw: string | undefined,
         public outputId: string | undefined,
