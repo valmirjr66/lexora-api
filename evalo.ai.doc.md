@@ -30,11 +30,31 @@ The MVP will be based on interviews for Software Developer positions (JavaScript
     
     2.1. **API**
     
-    A RESTful API will be implemented using NestJS and deployed in a serverless environment on a cloud service provider (likely AWS). The API will connect to a MongoDB database for structured data (on code rather than using built-in database relations) and to a binary object storage service (e.g., S3) for storing assets such as recordings and transcripts.
+    A RESTful API will be implemented using NestJS and deployed in a serverless environment on a cloud service provider (likely AWS). The API will connect to a Mongo database for structured/unstructured data persistence and to a binary object storage service (e.g., S3) for storing assets such as transcripts.
     
-    The initial set of routes will include:
+    2.2. **UI**
     
-    - **Authentication**: `POST /login`, using hard-coded credential pairs for MVP purposes.
+    A minimal web-based UI will be developed to consume the API and validate end-to-end flows. The UI will also be deployed serverless and will focus on enabling basic interaction with scripts, interviews, and results.
+    
+    The login screen will provide a simple authentication flow, serving primarily to gate access to the MVP features rather than enforce production-grade security.
+    
+3. **Testing**
+    
+    *TBD*
+    
+
+## Requirements
+
+### 1. API routes
+    
+    - **Users**:
+        - `GET /users`
+        - `POST /users`
+        - `PUT /users/:id`
+        - `GET /users/:id`
+        - `DELETE /users/:id`
+        - `POST /users/authenticate`
+        - `POST /users/change-password`
     - **Scripts**:
         - `GET /scripts`
         - `GET /scripts/:id`
@@ -56,23 +76,8 @@ The MVP will be based on interviews for Software Developer positions (JavaScript
         - `POST /scripts/:script-id/occurrences/:occurrence-id/outputs`
         - `PUT /scripts/:script-id/occurrences/:occurrence-id/outputs/:id`
         - `DELETE /scripts/:script-id/occurrences/:occurrence-id/outputs/:id`
-    
-    2.2. **UI**
-    
-    A minimal web-based UI will be developed to consume the API and validate end-to-end flows. The UI will also be deployed serverless and will focus on enabling basic interaction with scripts, interviews, and results.
-    
-    2.2.1. **Login**
-    
-    The login screen will provide a simple authentication flow based on the API’s hard-coded credentials, serving primarily to gate access to the MVP features rather than enforce production-grade security.
-    
-3. **Testing**
-    
-    *TBD*
-    
 
-## Requirements
-
-### 1. Entities
+### 2. Entities
 
 **a) Script Block**
 
@@ -80,9 +85,10 @@ Represents a question in the interview’s script and can be of the following ty
 
 - EVAL: evaluated answers. which means that a correct one exists and is expected (at least partially);
 - OPEN: a space for answers that are beyond right/wrong (e.g.: academic trajectory, professional experiences etc);
-- CODE: answers are evaluated code snippets or pseudo-code using LLM semantic analysis (MVP)
 
 The content is the question itself and it’s always bound to a specific parent script.
+
+Blocks always have a tag that's meant to group questions such "JavaScript" or "DevOps Engineering".
 
 The objective describes what the question aims to evaluate. E.g.:
 
@@ -98,7 +104,8 @@ The objective describes what the question aims to evaluate. E.g.:
 - Script Id (uuid)
 - Created At (date time, read only)
 - Updated At (date time, read only)
-- Type (EVAL, OPEN, CODE)
+- Tag (string)
+- Type (EVAL, OPEN)
 - Content (string)
 - Objective (optional string)
 - Expected Response (optional string, required if Type is EVAL)
@@ -127,7 +134,7 @@ Scripts are immutable once used in an occurrence. Any modification to blocks, ex
 - Description (optional string)
 - Created At (date time, read only)
 - Updated At (date time, read only)
-- Blocks (collection of <Script Block>)
+- Blocks (collection of `<Script Block>`)
 
 **c) Occurrence**
 
@@ -142,7 +149,7 @@ An occurrence represents a single completed or in-progress interview session.
 - Id (uuid)
 - Script Id (uuid)
 - Script Version (number)
-- Subject Name (string)
+- Applicant Name (string)
 - Status (enum: CREATED, COMPLETED)
 - Transcript Raw (string or large text field)
 - Output Id (optional uuid)
@@ -175,6 +182,76 @@ The output artifact is generated after an occurrence is processed and is intende
         
 - Final Verdict (string)
 - Generated At (date time, read only)
+
+
+## System Architecture — Agent Orchestration
+### 1. Overview
+
+Output generation is executed through a deterministic multi-agent pipeline triggered by POST /outputs. Each agent has a single responsibility and communicates through structured contracts. The final authority in the pipeline is the Evalo reconciliation agent.
+
+### 2. Agents & Responsibilities
+
+Lyra — EVAL & OPEN evaluation
+
+Evalo — reconciliation + artifact generation
+
+### 3. Orchestration Flow
+
+```mermaid
+flowchart TD
+
+    A[POST /occurrences/:id/outputs] 
+        -->|Trigger: Generate Evaluation| B[Orchestrator]
+
+    B <-->|Load Occurrence + Script Version| C[(Database)]
+
+    B -->|Dispatch Processing Job| D[Lyra<br/>Response Evaluation Agent]
+
+    D -->|... N Evaluation Reports ...| E[Evalo<br/>Final Reconciliation Agent]
+
+    E -->|Final Output Artifact Contract| F[(Persist Output)]
+    F --> G[Return API Response]
+```
+
+### 4. Inter-Agent Contracts
+
+Orchestrator → Lyra:
+```
+{
+  "occurrence_id": "uuid"
+}
+```
+
+Lyra → Evalo:
+```
+{
+  "occurrence_id": "uuid",
+  "evaluations": [
+    {
+      "block_id": "uuid",
+      "assessment": "PASS | PARTIAL | FAIL",
+      "justification": "string",
+      "transcript_references": ["quoted excerpt"]
+    }
+  ]
+}
+```
+
+Evalo → Output Artifact:
+```
+{
+  "occurrence_id": "uuid",
+  "overall_assessment": "STRONG | ADEQUATE | WEAK",
+  "strengths": ["string"],
+  "weaknesses": ["string"],
+  "evaluation_per_tag": [
+    {
+        "tag": "string",
+        "evaluation": "string"
+    }
+  ]
+}
+```
 
 ## **MVP Operational Constraints & Assumptions**
 
@@ -211,52 +288,29 @@ No intermediate or failure states are modeled in MVP.
 
 Transcript segmentation, alignment to blocks, or semantic indexing are out of scope for MVP.
 
-### **5. Evaluation Architecture**
-
-Evaluation is performed using a multi-agent pipeline:
-
-- **Transcription Processing Agent**
-    
-    Normalizes and prepares transcript text for downstream evaluation.
-    
-- **Response Evaluation Agent**
-    
-    Evaluates answers for EVAL and OPEN script blocks using LLM semantic analysis.
-    
-- **Code Evaluation Agent**
-    
-    Evaluates CODE script blocks using LLM-based semantic code review only.
-    
-- **Reconciliation Agent**
-    
-    Consolidates evaluation outputs into a unified final output artifact.
-    
-
-No deterministic code execution, sandboxing, or rubric scoring engines are used in MVP.
-
-### **6. Output Artifact Behavior**
+### **5. Output Artifact Behavior**
 
 - Output artifacts are generated once per completed occurrence.
 - Artifacts are treated as immutable historical records after generation.
 - Artifacts are not automatically regenerated if scripts change later.
 
-### **7. Subject Identity Model**
+### **6. Applicant Identity Model**
 
-- Interview subjects are represented using a simple free-text **Subject Name** field stored in the occurrence.
-- No subject identity entity or historical subject tracking is implemented in MVP.
+- Interview applicants are represented using a simple free-text **Applicant Name** field stored in the occurrence.
+- No applicant identity entity or historical applicant tracking is implemented in MVP.
 
-### **8. Security Model**
+### **7. Security Model**
 
-- Authentication uses hard-coded credential pairs for MVP validation purposes.
+- Authentication uses plain text credentials stored in the database for MVP validation purposes.
 - No role-based access control, tenant isolation, or production-grade identity federation is implemented.
 
-### **9. Conversation Storage**
+### **8. Conversation Storage**
 
 - Conversations are stored as raw transcript text.
 - No structured turn-by-turn message storage is required in MVP.
 - No embedding-based search or retrieval is implemented.
 
-### **10. Failure Handling**
+### **9. Failure Handling**
 
 - MVP assumes successful execution of transcription, evaluation, and artifact generation.
 - Retry, rollback, and partial evaluation recovery mechanisms are out of scope.
