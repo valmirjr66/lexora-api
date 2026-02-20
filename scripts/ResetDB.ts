@@ -1,9 +1,6 @@
 import axios from 'axios';
 import * as dotenv from 'dotenv';
-import FormData from 'form-data';
-import * as fs from 'fs';
 import { MongoClient } from 'mongodb';
-import * as path from 'path';
 import askForConfirmation from './AskForConfirmation';
 import { DEFAULT_PASSWORD, DEFAULT_USER_EMAIL, SCRIPT_1 } from './Utils';
 
@@ -40,22 +37,6 @@ async function insertUser(fullname: string, email: string): Promise<string> {
     console.log(`Inserted user with id: ${userData.id}`);
 
     return userData.id as string;
-}
-
-async function updateUserProfilePicture(
-    userId: string,
-    picPath: string,
-): Promise<void> {
-    console.log(`Updating profile picture for user with id: ${userId}`);
-    const profilePic: FormData = new FormData();
-    profilePic.append('profilePicture', fs.createReadStream(picPath), '');
-    await axios.put(`${API_URL}/users/${userId}/profile-picture`, profilePic, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
-    });
-
-    console.log(`Updated profile picture for user with id: ${userId}`);
 }
 
 async function insertScriptAndItsBlocks(
@@ -134,15 +115,6 @@ async function resetMongoDB() {
             'Valmir Gonçalves Martins Junior',
             DEFAULT_USER_EMAIL,
         );
-
-        console.log('Updating user profile picture');
-
-        const userPicPath = path.join(
-            path.resolve(__dirname, 'assets'),
-            'monkey.jpg',
-        );
-
-        await updateUserProfilePicture(userId, userPicPath);
 
         console.log('Inserting scripts');
 

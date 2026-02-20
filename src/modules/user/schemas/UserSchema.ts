@@ -13,9 +13,6 @@ export class User extends BaseSchema {
     email: string;
 
     @Prop()
-    profilePicFileName?: string;
-
-    @Prop()
     birthdate: string;
 }
 

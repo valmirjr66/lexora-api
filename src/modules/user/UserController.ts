@@ -9,15 +9,10 @@ import {
     Post,
     Put,
     Query,
-    UploadedFiles,
-    UseInterceptors,
 } from '@nestjs/common';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import {
     ApiBadRequestResponse,
-    ApiBody,
     ApiConflictResponse,
-    ApiConsumes,
     ApiCreatedResponse,
     ApiInternalServerErrorResponse,
     ApiNoContentResponse,
@@ -28,7 +23,6 @@ import {
 import { RESPONSE_DESCRIPTIONS } from 'src/constants';
 import UserService from './UserService';
 import AuthenticateUserRequestDto from './dto/AuthenticateUserRequestDto';
-import ChangeProfilePictureRequestDto from './dto/ChangeProfilePictureRequestDto';
 import GetUserInfoResponseDto from './dto/GetUserInfoResponseDto';
 import InsertUserRequestDto from './dto/InsertUserRequestDto';
 import ListUsersInfoResponseDto from './dto/ListUsersInfoResponseDto';
@@ -121,43 +115,6 @@ export default class UserController {
     })
     async deleteUserById(@Param('id') id: string): Promise<void> {
         await this.userService.deleteUserById(id);
-    }
-
-    @Put('/:id/profile-picture')
-    @ApiConsumes('multipart/form-data')
-    @UseInterceptors(
-        FileFieldsInterceptor([{ name: 'profilePicture', maxCount: 1 }]),
-    )
-    @ApiBody({
-        type: ChangeProfilePictureRequestDto,
-    })
-    @ApiCreatedResponse({ description: RESPONSE_DESCRIPTIONS.OK })
-    @ApiBadRequestResponse({ description: RESPONSE_DESCRIPTIONS.BAD_REQUEST })
-    @ApiInternalServerErrorResponse({
-        description: RESPONSE_DESCRIPTIONS.INTERNAL_SERVER_ERROR,
-    })
-    async changeProfilePicture(
-        @Param('id') userId: string,
-        @UploadedFiles()
-        files: {
-            profilePicture: Express.Multer.File[];
-        },
-    ): Promise<void> {
-        const { profilePicture } = files;
-
-        await this.userService.changeProfilePicture({
-            userId,
-            profilePicture: profilePicture[0],
-        });
-    }
-
-    @Delete('/:id/profile-picture')
-    @ApiOkResponse({ description: RESPONSE_DESCRIPTIONS.OK })
-    @ApiInternalServerErrorResponse({
-        description: RESPONSE_DESCRIPTIONS.INTERNAL_SERVER_ERROR,
-    })
-    async removeProfilePicture(@Param('id') id: string): Promise<void> {
-        await this.userService.removeProfilePicture(id);
     }
 
     @Post()

@@ -12,7 +12,4 @@ export default class GetDoctorUserInfoResponseDto {
 
     @ApiProperty()
     public birthdate: string;
-
-    @ApiProperty()
-    public profilePicFileName?: string;
 }
