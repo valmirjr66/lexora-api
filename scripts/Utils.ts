@@ -1,4 +1,4 @@
-export const DEFAULT_USER_EMAIL = 'user1@lexora.com';
+export const DEFAULT_USER_EMAIL = 'user1@evalo.com';
 export const DEFAULT_PASSWORD = '123';
 
 export const SCRIPT_1 = {
