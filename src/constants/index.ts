@@ -15,4 +15,9 @@ export const SCRIPT_BLOCK_TYPES = ['EVAL', 'OPEN'] as const;
 
 export const SCRIPT_TYPES = ['TECHNICAL_INTERVIEW'] as const;
 
-export const OCCURRENCE_STATUSES = ['CREATED', 'COMPLETED'] as const;
+export const OCCURRENCE_STATUSES = [
+    'CREATED',
+    'READY',
+    'PROCESSING',
+    'COMPLETED',
+] as const;

@@ -25,9 +25,6 @@ export class Occurrence extends BaseSchema {
     @Prop()
     outputId?: mongoose.Types.ObjectId;
 
-    @Prop({ required: true })
-    startedAt: Date;
-
     @Prop()
     finishedAt?: Date;
 }

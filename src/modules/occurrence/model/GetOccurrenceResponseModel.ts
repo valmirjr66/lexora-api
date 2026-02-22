@@ -10,7 +10,6 @@ export default class GetOccurrenceResponseModel {
         public transcriptRaw: string | undefined,
         public outputId: string | undefined,
         public createdAt: Date,
-        public startedAt: Date,
         public finishedAt: Date | undefined,
     ) {}
 }

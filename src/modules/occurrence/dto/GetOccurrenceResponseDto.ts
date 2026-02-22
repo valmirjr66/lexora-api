@@ -27,9 +27,6 @@ export default class GetOccurrenceResponseDto {
     @ApiProperty()
     public createdAt: Date;
 
-    @ApiProperty()
-    public startedAt: Date;
-
     @ApiPropertyOptional()
     public finishedAt?: Date;
 }

@@ -56,7 +56,7 @@ export default class OccurrenceService {
     }
 
     async insert(model: InsertOccurrenceRequestModel): Promise<{ id: string }> {
-        const { scriptId, applicantName, transcriptRaw } = model;
+        const { scriptId, applicantName } = model;
 
         this.logger.log(`Inserting occurrence for script id: ${scriptId}`);
 
@@ -79,8 +79,6 @@ export default class OccurrenceService {
                 scriptVersion: script.version,
                 applicantName,
                 status: 'CREATED',
-                transcriptRaw,
-                startedAt: now,
                 createdAt: now,
                 updatedAt: now,
             });
@@ -186,7 +184,6 @@ export default class OccurrenceService {
             occ.transcriptRaw,
             occ.outputId?.toString(),
             occ.createdAt,
-            occ.startedAt,
             occ.finishedAt,
         );
     }
