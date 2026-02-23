@@ -1,11 +1,15 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+    BadRequestException,
+    Injectable,
+    Logger,
+    NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { Script } from '../script/schemas/ScriptSchema';
 import GetOccurrenceResponseModel from './model/GetOccurrenceResponseModel';
 import InsertOccurrenceRequestModel from './model/InsertOccurrenceRequestModel';
 import ListOccurrencesResponseModel from './model/ListOccurrencesResponseModel';
-import UpdateOccurrenceRequestModel from './model/UpdateOccurrenceRequestModel';
 import { Occurrence } from './schemas/OccurrenceSchema';
 
 @Injectable()
@@ -95,37 +99,45 @@ export default class OccurrenceService {
         }
     }
 
-    async update(model: UpdateOccurrenceRequestModel): Promise<void> {
-        const { id } = model;
-
-        this.logger.log(`Updating occurrence with id: ${id}`);
+    async attachTranscript(
+        occurrenceId: string,
+        transcriptRaw: string,
+    ): Promise<void> {
+        this.logger.log(
+            `Attaching transcript to occurrence with id: ${occurrenceId}`,
+        );
 
         try {
             const occurrence = await this.occurrenceModel
-                .findById(new mongoose.Types.ObjectId(id))
+                .findById(new mongoose.Types.ObjectId(occurrenceId))
                 .exec()
                 .then((doc) => doc?.toObject());
 
             if (!occurrence) {
-                this.logger.error(`Occurrence with id ${id} not found`);
+                this.logger.error(
+                    `Occurrence with id ${occurrenceId} not found`,
+                );
                 throw new NotFoundException();
             }
 
+            if (occurrence.status !== 'CREATED') {
+                throw new BadRequestException(
+                    `Cannot attach transcript: occurrence is in ${occurrence.status} status`,
+                );
+            }
+
             await this.occurrenceModel.findByIdAndUpdate(occurrence._id, {
-                applicantName: model.applicantName,
-                status: model.status,
-                transcriptRaw: model.transcriptRaw ?? null,
-                outputId: model.outputId
-                    ? new mongoose.Types.ObjectId(model.outputId)
-                    : null,
-                finishedAt: model.finishedAt ?? null,
+                transcriptRaw,
+                status: 'READY',
                 updatedAt: new Date(),
             });
 
-            this.logger.log(`Occurrence with id ${id} updated successfully`);
+            this.logger.log(
+                `Transcript attached to occurrence with id ${occurrenceId}, status is now READY`,
+            );
         } catch (error) {
             this.logger.error(
-                `Error updating occurrence with id ${id}: ${error}`,
+                `Error attaching transcript to occurrence with id ${occurrenceId}: ${error}`,
             );
             throw error;
         }
@@ -171,6 +183,46 @@ export default class OccurrenceService {
         }
     }
 
+    async processOccurrence(occurrenceId: string): Promise<void> {
+        this.logger.log(`Processing occurrence with id: ${occurrenceId}`);
+
+        try {
+            const occurrence = await this.occurrenceModel
+                .findById(new mongoose.Types.ObjectId(occurrenceId))
+                .exec()
+                .then((doc) => doc?.toObject());
+
+            if (!occurrence) {
+                this.logger.error(
+                    `Occurrence with id ${occurrenceId} not found`,
+                );
+                throw new NotFoundException();
+            }
+
+            if (occurrence.status !== 'READY') {
+                throw new BadRequestException(
+                    `Invalid status transition from ${occurrence.status} to PROCESSING`,
+                );
+            }
+
+            // TODO: trigger output artifact generation
+
+            await this.occurrenceModel.findByIdAndUpdate(occurrence._id, {
+                status: 'PROCESSING',
+                updatedAt: new Date(),
+            });
+
+            this.logger.log(
+                `Occurrence with id ${occurrenceId} is now PROCESSING`,
+            );
+        } catch (error) {
+            this.logger.error(
+                `Error completing occurrence with id ${occurrenceId}: ${error}`,
+            );
+            throw error;
+        }
+    }
+
     private toResponseModel(
         occ: Occurrence & { _id: mongoose.Types.ObjectId },
     ): GetOccurrenceResponseModel {
@@ -182,7 +234,6 @@ export default class OccurrenceService {
             occ.transcriptRaw,
             occ.outputId?.toString(),
             occ.createdAt,
-            occ.finishedAt,
         );
     }
 }

@@ -21,9 +21,6 @@ export class Occurrence extends BaseSchema {
 
     @Prop()
     outputId?: mongoose.Types.ObjectId;
-
-    @Prop()
-    finishedAt?: Date;
 }
 
 export const OccurrenceSchema = SchemaFactory.createForClass(Occurrence);

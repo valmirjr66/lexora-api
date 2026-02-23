@@ -1,12 +1,4 @@
-import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Param,
-    Post,
-    Put,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import {
     ApiBadRequestResponse,
     ApiCreatedResponse,
@@ -17,9 +9,9 @@ import {
 } from '@nestjs/swagger';
 import { RESPONSE_DESCRIPTIONS } from 'src/constants';
 import OccurrenceService from './OccurrenceService';
+import AttachTranscriptRequestDto from './dto/AttachTranscriptRequestDto';
 import InsertOccurrenceRequestDto from './dto/InsertOccurrenceRequestDto';
 import ListOccurrencesResponseDto from './dto/ListOccurrencesResponseDto';
-import UpdateOccurrenceRequestDto from './dto/UpdateOccurrenceRequestDto';
 
 @ApiTags('Occurrence')
 @Controller('scripts/:scriptId/occurrences')
@@ -60,18 +52,34 @@ export default class OccurrenceController {
         return response;
     }
 
-    @Put('/:occurrenceId')
+    @Post('/:occurrenceId/attach-transcript')
     @ApiOkResponse({ description: RESPONSE_DESCRIPTIONS.OK })
     @ApiNotFoundResponse({ description: RESPONSE_DESCRIPTIONS.NOT_FOUND })
     @ApiBadRequestResponse({ description: RESPONSE_DESCRIPTIONS.BAD_REQUEST })
     @ApiInternalServerErrorResponse({
         description: RESPONSE_DESCRIPTIONS.INTERNAL_SERVER_ERROR,
     })
-    async updateOccurrence(
+    async attachTranscript(
         @Param('occurrenceId') occurrenceId: string,
-        @Body() body: UpdateOccurrenceRequestDto,
+        @Body() body: AttachTranscriptRequestDto,
     ): Promise<void> {
-        await this.occurrenceService.update({ ...body, id: occurrenceId });
+        await this.occurrenceService.attachTranscript(
+            occurrenceId,
+            body.transcriptRaw,
+        );
+    }
+
+    @Post('/:occurrenceId/process')
+    @ApiOkResponse({ description: RESPONSE_DESCRIPTIONS.OK })
+    @ApiNotFoundResponse({ description: RESPONSE_DESCRIPTIONS.NOT_FOUND })
+    @ApiBadRequestResponse({ description: RESPONSE_DESCRIPTIONS.BAD_REQUEST })
+    @ApiInternalServerErrorResponse({
+        description: RESPONSE_DESCRIPTIONS.INTERNAL_SERVER_ERROR,
+    })
+    async processOccurrence(
+        @Param('occurrenceId') occurrenceId: string,
+    ): Promise<void> {
+        await this.occurrenceService.processOccurrence(occurrenceId);
     }
 
     @Delete('/:occurrenceId')
