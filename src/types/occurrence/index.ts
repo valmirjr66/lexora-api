@@ -1,3 +1,4 @@
-import { OCCURRENCE_STATUSES } from 'src/constants';
+import { OCCURRENCE_STATUS } from 'src/constants';
 
-export type OccurrenceStatus = (typeof OCCURRENCE_STATUSES)[number];
+export type OccurrenceStatus =
+    (typeof OCCURRENCE_STATUS)[keyof typeof OCCURRENCE_STATUS];

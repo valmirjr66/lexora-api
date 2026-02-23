@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
+import { SCRIPT_TYPE } from 'src/constants';
 import { ScriptType } from 'src/types/script';
 import BaseSchema from '../../../BaseSchema';
 
@@ -13,7 +14,7 @@ export class Script extends BaseSchema {
     @Prop({ required: true })
     title: string;
 
-    @Prop({ required: true, default: 'TECHNICAL_INTERVIEW' })
+    @Prop({ required: true, default: SCRIPT_TYPE.TECHNICAL_INTERVIEW })
     type: ScriptType;
 
     @Prop()

@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
+import { OCCURRENCE_STATUS } from 'src/constants';
 import { Script } from '../script/schemas/ScriptSchema';
 import GetOccurrenceResponseModel from './model/GetOccurrenceResponseModel';
 import InsertOccurrenceRequestModel from './model/InsertOccurrenceRequestModel';
@@ -81,7 +82,7 @@ export default class OccurrenceService {
                 _id: new mongoose.Types.ObjectId(),
                 scriptId: new mongoose.Types.ObjectId(scriptId),
                 applicantName,
-                status: 'CREATED',
+                status: OCCURRENCE_STATUS.CREATED,
                 createdAt: now,
                 updatedAt: now,
             });
@@ -120,7 +121,7 @@ export default class OccurrenceService {
                 throw new NotFoundException();
             }
 
-            if (occurrence.status !== 'CREATED') {
+            if (occurrence.status !== OCCURRENCE_STATUS.CREATED) {
                 throw new BadRequestException(
                     `Cannot attach transcript: occurrence is in ${occurrence.status} status`,
                 );
@@ -128,7 +129,7 @@ export default class OccurrenceService {
 
             await this.occurrenceModel.findByIdAndUpdate(occurrence._id, {
                 transcriptRaw,
-                status: 'READY',
+                status: OCCURRENCE_STATUS.READY,
                 updatedAt: new Date(),
             });
 
@@ -199,16 +200,16 @@ export default class OccurrenceService {
                 throw new NotFoundException();
             }
 
-            if (occurrence.status !== 'READY') {
+            if (occurrence.status !== OCCURRENCE_STATUS.READY) {
                 throw new BadRequestException(
-                    `Invalid status transition from ${occurrence.status} to PROCESSING`,
+                    `Invalid status transition from ${occurrence.status} to ${OCCURRENCE_STATUS.PROCESSING}`,
                 );
             }
 
             // TODO: trigger output artifact generation
 
             await this.occurrenceModel.findByIdAndUpdate(occurrence._id, {
-                status: 'PROCESSING',
+                status: OCCURRENCE_STATUS.PROCESSING,
                 updatedAt: new Date(),
             });
 

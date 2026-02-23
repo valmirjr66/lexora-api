@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
+import { OCCURRENCE_STATUS } from 'src/constants';
 import { OccurrenceStatus } from 'src/types/occurrence';
 import BaseSchema from '../../../BaseSchema';
 
@@ -13,7 +14,7 @@ export class Occurrence extends BaseSchema {
     @Prop({ required: true })
     applicantName: string;
 
-    @Prop({ required: true, default: 'CREATED' })
+    @Prop({ required: true, default: OCCURRENCE_STATUS.CREATED })
     status: OccurrenceStatus;
 
     @Prop()

@@ -1,5 +1,6 @@
-import { SCRIPT_BLOCK_TYPES, SCRIPT_TYPES } from 'src/constants';
+import { SCRIPT_BLOCK_TYPE, SCRIPT_TYPE } from 'src/constants';
 
-export type ScriptBlockType = (typeof SCRIPT_BLOCK_TYPES)[number];
+export type ScriptBlockType =
+    (typeof SCRIPT_BLOCK_TYPE)[keyof typeof SCRIPT_BLOCK_TYPE];
 
-export type ScriptType = (typeof SCRIPT_TYPES)[number];
+export type ScriptType = (typeof SCRIPT_TYPE)[keyof typeof SCRIPT_TYPE];
