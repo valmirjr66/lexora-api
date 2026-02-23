@@ -16,9 +16,6 @@ export class Script extends BaseSchema {
     @Prop({ required: true, default: 'TECHNICAL_INTERVIEW' })
     type: ScriptType;
 
-    @Prop({ required: true, default: 1 })
-    version: number;
-
     @Prop()
     description?: string;
 

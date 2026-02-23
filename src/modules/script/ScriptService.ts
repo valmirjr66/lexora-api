@@ -44,7 +44,6 @@ export default class ScriptService {
                 script.owner.toString(),
                 script.title,
                 script.type,
-                script.version,
                 script.description,
                 blocks,
                 script.createdAt,
@@ -109,7 +108,6 @@ export default class ScriptService {
                 owner: new mongoose.Types.ObjectId(model.owner),
                 title: model.title,
                 type: model.type,
-                version: 1,
                 description: model.description,
                 blockIds: [],
                 createdAt: new Date(),
@@ -149,13 +147,10 @@ export default class ScriptService {
                 title: model.title,
                 type: model.type,
                 description: model.description ?? null,
-                version: script.version + 1,
                 updatedAt: new Date(),
             });
 
-            this.logger.log(
-                `Script with id ${id} updated successfully to version ${script.version + 1}`,
-            );
+            this.logger.log(`Script with id ${id} updated successfully`);
         } catch (error) {
             this.logger.error(`Error updating script with id ${id}: ${error}`);
             throw error;
@@ -196,7 +191,6 @@ export default class ScriptService {
                             script.owner.toString(),
                             script.title,
                             script.type,
-                            script.version,
                             script.description,
                             allBlocks.filter((block) =>
                                 script.blockIds

@@ -44,9 +44,6 @@ export default class GetScriptResponseDto {
     @ApiProperty({ enum: SCRIPT_TYPES })
     public type: ScriptType;
 
-    @ApiProperty()
-    public version: number;
-
     @ApiPropertyOptional()
     public description?: string;
 

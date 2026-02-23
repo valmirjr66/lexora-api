@@ -76,7 +76,6 @@ export default class OccurrenceService {
             const createdOccurrence = await this.occurrenceModel.create({
                 _id: new mongoose.Types.ObjectId(),
                 scriptId: new mongoose.Types.ObjectId(scriptId),
-                scriptVersion: script.version,
                 applicantName,
                 status: 'CREATED',
                 createdAt: now,
@@ -84,7 +83,7 @@ export default class OccurrenceService {
             });
 
             this.logger.log(
-                `Occurrence created successfully with id ${createdOccurrence._id} for script version ${script.version}`,
+                `Occurrence created successfully with id ${createdOccurrence._id} for script id ${scriptId}`,
             );
 
             return { id: createdOccurrence.toObject()._id.toString() };
@@ -178,7 +177,6 @@ export default class OccurrenceService {
         return new GetOccurrenceResponseModel(
             occ._id.toString(),
             occ.scriptId.toString(),
-            occ.scriptVersion,
             occ.applicantName,
             occ.status,
             occ.transcriptRaw,

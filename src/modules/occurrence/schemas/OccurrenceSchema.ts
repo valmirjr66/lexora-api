@@ -11,9 +11,6 @@ export class Occurrence extends BaseSchema {
     scriptId: mongoose.Types.ObjectId;
 
     @Prop({ required: true })
-    scriptVersion: number;
-
-    @Prop({ required: true })
     applicantName: string;
 
     @Prop({ required: true, default: 'CREATED' })

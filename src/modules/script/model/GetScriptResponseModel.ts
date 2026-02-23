@@ -20,7 +20,6 @@ export default class GetScriptResponseModel {
         public owner: string,
         public title: string,
         public type: ScriptType,
-        public version: number,
         public description: string | undefined,
         public blocks: GetScriptBlockResponseModel[],
         public createdAt: Date,
