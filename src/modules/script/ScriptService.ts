@@ -46,7 +46,7 @@ export default class ScriptService {
 
             return new GetScriptResponseModel(
                 script._id.toString(),
-                script.owner.toString(),
+                script.userId.toString(),
                 script.title,
                 script.type,
                 script.description,
@@ -115,7 +115,7 @@ export default class ScriptService {
             const scriptWithSameTitle = await this.scriptModel
                 .findOne({
                     title: model.title,
-                    owner: new mongoose.Types.ObjectId(model.owner),
+                    userId: new mongoose.Types.ObjectId(model.userId),
                 })
                 .exec()
                 .then((doc) => doc?.toObject());
@@ -129,7 +129,7 @@ export default class ScriptService {
 
             const createdScript = await this.scriptModel.create({
                 _id: new mongoose.Types.ObjectId(),
-                owner: new mongoose.Types.ObjectId(model.owner),
+                userId: new mongoose.Types.ObjectId(model.userId),
                 title: model.title,
                 type: model.type,
                 description: model.description,
@@ -181,11 +181,11 @@ export default class ScriptService {
         }
     }
 
-    async listScripts(owner?: string): Promise<ListScriptsResponseModel> {
+    async listScripts(userId?: string): Promise<ListScriptsResponseModel> {
         this.logger.log('Listing all scripts');
 
         const filter: Record<string, any> = {};
-        if (owner) filter['owner'] = new mongoose.Types.ObjectId(owner);
+        if (userId) filter['userId'] = new mongoose.Types.ObjectId(userId);
 
         try {
             const scripts = await this.scriptModel
@@ -212,7 +212,7 @@ export default class ScriptService {
                     (script) =>
                         new GetScriptResponseModel(
                             script._id.toString(),
-                            script.owner.toString(),
+                            script.userId.toString(),
                             script.title,
                             script.type,
                             script.description,

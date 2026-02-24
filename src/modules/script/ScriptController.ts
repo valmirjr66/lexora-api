@@ -78,7 +78,7 @@ export default class ScriptController {
         const response = await this.scriptService.insertScript(body);
         if (response === 'existing title') {
             throw new HttpException(
-                'There is already a script with this title for this owner',
+                'There is already a script with this title for this user',
                 HttpStatus.CONFLICT,
             );
         } else {
@@ -110,9 +110,9 @@ export default class ScriptController {
         description: RESPONSE_DESCRIPTIONS.INTERNAL_SERVER_ERROR,
     })
     async listScripts(
-        @Query('owner') owner?: string,
+        @Query('userId') userId?: string,
     ): Promise<ListScriptsResponseDto> {
-        const response = await this.scriptService.listScripts(owner);
+        const response = await this.scriptService.listScripts(userId);
         return response;
     }
 

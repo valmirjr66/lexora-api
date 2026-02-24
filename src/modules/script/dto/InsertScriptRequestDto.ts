@@ -4,7 +4,7 @@ import { ScriptType } from 'src/types/script';
 
 export default class InsertScriptRequestDto {
     @ApiProperty({ required: true })
-    public owner: string;
+    public userId: string;
 
     @ApiProperty({ required: true })
     public title: string;

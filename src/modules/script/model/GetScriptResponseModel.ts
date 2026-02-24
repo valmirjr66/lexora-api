@@ -17,7 +17,7 @@ export class GetScriptBlockResponseModel {
 export default class GetScriptResponseModel {
     constructor(
         public id: string,
-        public owner: string,
+        public userId: string,
         public title: string,
         public type: ScriptType,
         public description: string | undefined,

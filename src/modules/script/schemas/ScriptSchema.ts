@@ -9,7 +9,7 @@ export type ScriptDocument = HydratedDocument<Script>;
 @Schema({ timestamps: true })
 export class Script extends BaseSchema {
     @Prop({ required: true })
-    owner: mongoose.Types.ObjectId;
+    userId: mongoose.Types.ObjectId;
 
     @Prop({ required: true })
     title: string;

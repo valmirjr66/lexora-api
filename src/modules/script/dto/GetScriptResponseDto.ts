@@ -36,7 +36,7 @@ export default class GetScriptResponseDto {
     public id: string;
 
     @ApiProperty()
-    public owner: string;
+    public userId: string;
 
     @ApiProperty()
     public title: string;
