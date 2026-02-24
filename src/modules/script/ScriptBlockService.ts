@@ -233,9 +233,13 @@ export default class ScriptBlockService {
         }
     }
 
-    async deleteByScriptId(blockIds: mongoose.Types.ObjectId[]): Promise<void> {
-        await this.scriptBlockModel.deleteMany({
-            _id: { $in: blockIds },
-        });
+    async deleteByScriptId(
+        blockIds: mongoose.Types.ObjectId[],
+        session?: mongoose.ClientSession,
+    ): Promise<void> {
+        await this.scriptBlockModel.deleteMany(
+            { _id: { $in: blockIds } },
+            { session },
+        );
     }
 }

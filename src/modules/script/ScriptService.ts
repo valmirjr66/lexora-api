@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model } from 'mongoose';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import mongoose, { Connection, Model } from 'mongoose';
+import { Occurrence } from '../occurrence/schemas/OccurrenceSchema';
 import GetScriptResponseModel from './model/GetScriptResponseModel';
 import InsertScriptRequestModel from './model/InsertScriptRequestModel';
 import ListScriptsResponseModel from './model/ListScriptsResponseModel';
@@ -15,6 +16,10 @@ export default class ScriptService {
     constructor(
         @InjectModel(Script.name)
         private readonly scriptModel: Model<Script>,
+        @InjectModel(Occurrence.name)
+        private readonly occurrenceModel: Model<Occurrence>,
+        @InjectConnection()
+        private readonly connection: Connection,
         private readonly scriptBlockService: ScriptBlockService,
     ) {}
 
@@ -58,27 +63,46 @@ export default class ScriptService {
     async deleteScriptById(id: string): Promise<void> {
         this.logger.log(`Deleting script with id: ${id}`);
 
+        const script = await this.scriptModel
+            .findById(new mongoose.Types.ObjectId(id))
+            .exec()
+            .then((doc) => doc?.toObject());
+
+        if (!script) {
+            this.logger.error(`Script with id ${id} not found`);
+            throw new NotFoundException();
+        }
+
+        const session = await this.connection.startSession();
+
         try {
-            const script = await this.scriptModel
-                .findById(new mongoose.Types.ObjectId(id))
-                .exec()
-                .then((doc) => doc?.toObject());
+            await session.withTransaction(async () => {
+                await this.occurrenceModel.deleteMany(
+                    { scriptId: script._id },
+                    { session },
+                );
 
-            if (!script) {
-                this.logger.error(`Script with id ${id} not found`);
-                throw new NotFoundException();
-            }
+                this.logger.log(`Occurrences deleted for script id: ${id}`);
 
-            await this.scriptBlockService.deleteByScriptId(script.blockIds);
+                await this.scriptBlockService.deleteByScriptId(
+                    script.blockIds,
+                    session,
+                );
 
-            this.logger.log(`Blocks deleted for script id: ${id}`);
+                this.logger.log(`Blocks deleted for script id: ${id}`);
 
-            await this.scriptModel.deleteOne({ _id: script._id });
+                await this.scriptModel.deleteOne(
+                    { _id: script._id },
+                    { session },
+                );
 
-            this.logger.log(`Script with id ${id} deleted successfully`);
+                this.logger.log(`Script with id ${id} deleted successfully`);
+            });
         } catch (error) {
             this.logger.error(`Error deleting script with id ${id}: ${error}`);
             throw error;
+        } finally {
+            await session.endSession();
         }
     }
 
