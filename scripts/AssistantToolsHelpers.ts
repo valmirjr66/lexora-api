@@ -1,12 +1,12 @@
 import { AssistantTool } from 'openai/resources/beta/assistants.mjs';
 
-export const LEXORA_TOOLS: AssistantTool[] = [
+export const EVALO_TOOLS: AssistantTool[] = [
     {
         type: 'function',
         function: {
-            name: 'get_user_info',
+            name: 'get_applicant_info',
             description:
-                "Retrieves user's information including fullname, email and birthdate",
+                "Retrieves applicant's information including name, short bio, professional experiences and education",
             strict: false,
             parameters: {
                 type: 'object',
@@ -14,18 +14,5 @@ export const LEXORA_TOOLS: AssistantTool[] = [
                 required: [],
             },
         },
-    },
-    {
-        type: 'function',
-        function: {
-            name: 'get_current_datetime',
-            description: "Returns user's current date and time",
-            strict: false,
-            parameters: {
-                type: 'object',
-                properties: {},
-                required: [],
-            },
-        },
-    },
+    }
 ];

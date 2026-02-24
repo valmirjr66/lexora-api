@@ -16,7 +16,7 @@ export class TextResponse {
 export default class ChatAssistant {
     private readonly logger: Logger = new Logger('ChatAssistant');
     private readonly openaiClient: OpenAI = new OpenAI();
-    private readonly assistantId: string = process.env.LEXORA_ID;
+    private readonly assistantId: string = process.env.EVALO_ID;
 
     constructor(private readonly userInfoTool: UserInfoTool) {}
 
@@ -30,7 +30,6 @@ export default class ChatAssistant {
     public async addMessageToThread(
         threadId: string,
         message: string,
-        userId: string,
     ): Promise<TextResponse> {
         this.logger.log(`Adding message to thread ${threadId}: "${message}"`);
         await this.openaiClient.beta.threads.messages.create(threadId, {
@@ -63,7 +62,7 @@ export default class ChatAssistant {
                 this.logger.log(
                     `Executing tool call: ${call.function.name} (id: ${call.id})`,
                 );
-                await this.executeToolCall(call, context, toolOutputs, userId);
+                await this.executeToolCall(call, context, toolOutputs);
             }
 
             this.logger.log(
@@ -113,7 +112,6 @@ export default class ChatAssistant {
     public async addMessageToThreadByStream(
         threadId: string,
         message: string,
-        userId: string,
         streamingCallback: (textSnapshot: string, finished: boolean) => void,
     ): Promise<TextResponse> {
         this.logger.log(
@@ -173,7 +171,7 @@ export default class ChatAssistant {
                 this.logger.log(
                     `Executing tool call: ${call.function.name} (id: ${call.id})`,
                 );
-                await this.executeToolCall(call, context, toolOutputs, userId);
+                await this.executeToolCall(call, context, toolOutputs);
             }
 
             this.logger.log(
@@ -222,23 +220,40 @@ export default class ChatAssistant {
         toolCall: RequiredActionFunctionToolCall,
         context: Record<string, any>,
         toolOutputs: RunSubmitToolOutputsParams.ToolOutput[],
-        userId: string,
     ) {
         this.logger.log(
             `Executing tool call function: ${toolCall.function.name} (id: ${toolCall.id}) with args: ${toolCall.function.arguments}`,
         );
 
-        if (toolCall.function.name === 'get_user_info') {
-            const userInfo = await this.userInfoTool.getUserInfo(userId);
+        if (toolCall.function.name === 'get_applicant_info') {
+            const MOCKED_APPLICANT_INFO = {
+                name: 'John Doe',
+                shortBio: 'A short bio of the applicant',
+                professionalExperiences: [
+                    {
+                        company: 'Company 1',
+                        title: 'Title 1',
+                        description: 'Description 1',
+                    },
+                ],
+                education: [
+                    {
+                        school: 'School 1',
+                        degree: 'Degree 1',
+                        description: 'Description 1',
+                    },
+                ],
+            };
 
-            context.userInfo = userInfo;
+            // TODO: Remove this mock and use the actual applicant info
+            context.applicantInfo = MOCKED_APPLICANT_INFO;
 
             this.logger.log(
-                `get_user_info result: ${JSON.stringify(userInfo)}`,
+                `get_applicant_info result: ${JSON.stringify(MOCKED_APPLICANT_INFO)}`,
             );
             toolOutputs.push({
                 tool_call_id: toolCall.id,
-                output: JSON.stringify(userInfo),
+                output: JSON.stringify(MOCKED_APPLICANT_INFO),
             });
         } else {
             this.logger.error(`Unknown function: ${toolCall.function.name}`);

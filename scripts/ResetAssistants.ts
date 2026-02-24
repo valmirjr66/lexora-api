@@ -3,7 +3,7 @@ import fs from 'fs';
 import { OpenAI } from 'openai';
 import { AssistantTool } from 'openai/resources/beta/assistants.mjs';
 import askForConfirmation from './AskForConfirmation';
-import { LEXORA_TOOLS } from './AssistantToolsHelpers';
+import { EVALO_TOOLS } from './AssistantToolsHelpers';
 import { createOrUpdateSecret } from './SecretManagerHelper';
 
 dotenv.config();
@@ -14,10 +14,11 @@ const OPENAI_CLIENT = new OpenAI({
 
 const MODEL_TO_BE_USED = 'gpt-4o';
 
-const LEXORA_INSTRUCTIONS = `
-You are Lexora, a virtual assistant created to help users conduct interviews and research based on the context provided and pre-defined scripts/
-Always be conscise and clear, but also sympathetic. Your messages will be presented in a dynamic UI, so enrich your answers with Markdown when seem fit.
-Be structured, quickly readable and visually intuititive.
+const EVALO_INSTRUCTIONS = `
+You are Evalo, a virtual assistant created to help users conduct interviews.
+You will be given a transcript of a user's interview and you will need to answer questions based on the transcript.
+You will also be given a list of questions that the user can ask.
+You will need to answer the questions based on the transcript and the list of questions.
 `.trim();
 
 function updateEnvFile(key: string, value: string, envFilePath = '.env') {
@@ -123,11 +124,11 @@ async function resetAssistants() {
     );
 
     await createOrUpdateAssistant(
-        isProd ? 'Prod Lexora' : 'Dev Lexora',
-        LEXORA_INSTRUCTIONS,
-        isProd ? null : 'LEXORA_ID',
-        process.env.LEXORA_ID_SECRET_NAME,
-        LEXORA_TOOLS,
+        isProd ? 'Prod Evalo' : 'Dev Evalo',
+        EVALO_INSTRUCTIONS,
+        isProd ? null : 'EVALO_ID',
+        process.env.EVALO_ID_SECRET_NAME,
+        EVALO_TOOLS,
     );
 
     console.log('Assistants updated and secrets set.');
