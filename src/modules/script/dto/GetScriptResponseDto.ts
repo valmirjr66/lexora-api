@@ -13,6 +13,9 @@ export class GetScriptBlockResponseDto {
     public type: ScriptBlockType;
 
     @ApiProperty()
+    public order: number;
+
+    @ApiProperty()
     public content: string;
 
     @ApiPropertyOptional()

@@ -51,6 +51,7 @@ export default class ScriptBlockService {
                             block._id.toString(),
                             block.scriptId.toString(),
                             block.type,
+                            block.order,
                             block.content,
                             block.objective,
                             block.expectedResponse,
@@ -82,6 +83,7 @@ export default class ScriptBlockService {
                     block._id.toString(),
                     block.scriptId.toString(),
                     block.type,
+                    block.order,
                     block.content,
                     block.objective,
                     block.expectedResponse,
@@ -98,6 +100,7 @@ export default class ScriptBlockService {
         const {
             scriptId,
             type,
+            order,
             content,
             objective,
             expectedResponse,
@@ -121,6 +124,7 @@ export default class ScriptBlockService {
                 _id: new mongoose.Types.ObjectId(),
                 scriptId: new mongoose.Types.ObjectId(scriptId),
                 type,
+                order,
                 content,
                 objective,
                 expectedResponse,
@@ -167,6 +171,7 @@ export default class ScriptBlockService {
 
             await this.scriptBlockModel.findByIdAndUpdate(block._id, {
                 type: model.type,
+                order: model.order,
                 content: model.content,
                 objective: model.objective ?? null,
                 expectedResponse: model.expectedResponse ?? null,

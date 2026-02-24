@@ -13,6 +13,9 @@ export class ScriptBlock extends BaseSchema {
     @Prop({ required: true })
     type: ScriptBlockType;
 
+    @Prop({ required: true, min: 1 })
+    order: number;
+
     @Prop({ required: true })
     content: string;
 

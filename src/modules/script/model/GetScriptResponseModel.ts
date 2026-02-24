@@ -5,6 +5,7 @@ export class GetScriptBlockResponseModel {
         public id: string,
         public scriptId: string,
         public type: ScriptBlockType,
+        public order: number,
         public content: string,
         public objective: string | undefined,
         public expectedResponse: string | undefined,
