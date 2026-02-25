@@ -45,39 +45,7 @@ The MVP will be based on interviews for Software Developer positions (JavaScript
 
 ## Requirements
 
-### 1. API routes
-    
-    - **Users**:
-        - `GET /users`
-        - `POST /users`
-        - `PUT /users/:id`
-        - `GET /users/:id`
-        - `DELETE /users/:id`
-        - `POST /users/authenticate`
-        - `POST /users/change-password`
-    - **Scripts**:
-        - `GET /scripts`
-        - `GET /scripts/:id`
-        - `POST /scripts`
-        - `PUT /scripts/:id`
-        - `DELETE /scripts/:id`
-    - **Script blocks** (scoped by script ID):
-        - `GET /scripts/:script-id/blocks`
-        - `POST /scripts/:script-id/blocks`
-        - `PUT /scripts/:script-id/blocks/:block-id`
-        - `DELETE /scripts/:script-id/blocks/:block-id`
-    - **Occurrences** (scoped by script ID):
-        - `GET /scripts/:script-id/occurrences`
-        - `POST /scripts/:script-id/occurrences`
-        - `PUT /scripts/:script-id/occurrences/:occurrence-id`
-        - `DELETE /scripts/:script-id/occurrences/:occurrence-id`
-    - **Output** (scoped by occurrence ID):
-        - `GET /scripts/:script-id/occurrences/:occurrence-id/outputs`
-        - `POST /scripts/:script-id/occurrences/:occurrence-id/outputs`
-        - `PUT /scripts/:script-id/occurrences/:occurrence-id/outputs/:id`
-        - `DELETE /scripts/:script-id/occurrences/:occurrence-id/outputs/:id`
-
-### 2. Entities
+### 1. Entities
 
 **a) Script Block**
 
@@ -98,67 +66,37 @@ The objective describes what the question aims to evaluate. E.g.:
 > *Objective: To see if the user knows the concept and understands that it doesn’t always translate to code quality.*
 > 
 
-**Attributes:**
-
-- Id (uuid)
-- Script Id (uuid)
-- Created At (date time, read only)
-- Updated At (date time, read only)
-- Tag (string)
-- Type (EVAL, OPEN)
-- Content (string)
-- Objective (optional string)
-- Expected Response (optional string, required if Type is EVAL)
-- Common Mistakes (optional string)
-
 **b) Script**
 
 Represents the template of an interview process. A script defines the structure, intent, and ordering of questions that should be used to guide a specific type of interview (e.g.: technical assessment).
 
-A script is composed of a collection of *script blocks*, which represent individual interaction units (questions or tasks). Scripts are versioned to ensure that interview executions can always be traced back to the exact structure and expectations that were in place at the time of the interview.
+A script is composed of a collection of *script blocks*, which represent individual interaction units (questions or tasks). Scripts are immutable to ensure that interview executions can always be traced back to the exact structure and expectations that were in place at the time of the interview.
 
 Conceptually:
 
 - **Script** = Interview template definition
-- **Occurrence** = Execution of a specific Script version using a real conversation transcript and producing an output artifact
+- **Occurrence** = Execution of a specific Script using a real conversation transcript and producing an output artifact
 
-Scripts are immutable once used in an occurrence. Any modification to blocks, expected responses, or structure should result in a new script version.
-
-**Attributes:**
-
-- Id (uuid)
-- Owner (uuid)
-- Title (string)
-- Type (string - in the MVP will always be TECHNICAL_INTERVIEW)
-- Version (number, incremented)
-- Description (optional string)
-- Created At (date time, read only)
-- Updated At (date time, read only)
-- Blocks (collection of `<Script Block>`)
+**Deletion Rules:**
+- Deleting a Script must cascade delete:
+- All associated Script Blocks
+- All associated Occurrences
+- All associated Output Artifacts
+- Cascade deletion must be atomic.
+- If any related entity fails deletion, the entire operation must fail.
+- On successful deletion, return HTTP 204.
 
 **c) Occurrence**
 
-Represents the execution of an interview using a specific version of a script. An occurrence links a script template to a real interview instance, containing the collected conversation transcript and serving as the source input for evaluation and output artifact generation.
+Represents the execution of an interview using a specific script. An occurrence links a script template to a real interview instance, containing the collected conversation transcript and serving as the source input for evaluation and output artifact generation.
 
-Each occurrence is immutable in relation to the script structure it was executed against. This is ensured by storing both the script identifier and the script version used at execution time.
+Each occurrence is immutable in relation to the script structure it was executed against, this is ensured by storing the script identifier.
 
 An occurrence represents a single completed or in-progress interview session.
 
-**Attributes:**
-
-- Id (uuid)
-- Script Id (uuid)
-- Script Version (number)
-- Applicant Name (string)
-- Status (enum: CREATED, COMPLETED)
-- Transcript Raw (string or large text field)
-- Output Id (optional uuid)
-    
-    *(Reference to the generated output artifact once evaluation is completed.)*
-    
-- Created At (date time)
-- Started At (date time)
-- Finished At (optional date time)
+**Deletion Rules:**
+- Deleting an Occurrence must cascade delete:
+    - The associated Output Artifact (if it exists)
 
 **d) Output Artifact**
 
@@ -170,24 +108,19 @@ The output artifact is generated after an occurrence is processed and is intende
 
 - Id (uuid)
 - Occurrence Id (uuid)
-- Summary (string)
-    
-    *(High-level synthesis of the interview and main signals detected.)*
-    
-- Block Feedback (collection of objects)
-    - Script Block Id (uuid)
+- Overall Assessment (string: STRONG | ADEQUATE | WEAK)
+- Strengths (collection of strings)
+- Weaknesses (collection of strings)
+- Evaluation Per Tag (collection of objects)
+    - Tag (string)
     - Evaluation (string)
-        
-        *(Narrative explanation of correctness, completeness, or quality.)*
-        
-- Final Verdict (string)
 - Generated At (date time, read only)
 
 
 ## System Architecture — Agent Orchestration
 ### 1. Overview
 
-Output generation is executed through a deterministic multi-agent pipeline triggered by POST /outputs. Each agent has a single responsibility and communicates through structured contracts. The final authority in the pipeline is the Evalo reconciliation agent.
+Output generation is executed through a multi-agent pipeline triggered by POST /outputs. Each agent has a single responsibility and communicates through structured contracts. The final authority in the pipeline is the Evalo reconciliation agent.
 
 ### 2. Agents & Responsibilities
 
@@ -200,17 +133,15 @@ Evalo — reconciliation + artifact generation
 ```mermaid
 flowchart TD
 
-    A[POST /occurrences/:id/outputs] 
-        -->|Trigger: Generate Evaluation| B[Orchestrator]
+    A["HTTP POST
+    (with occurrence id)"] -->|Trigger: Generate Evaluation| B[Orchestrator]
 
-    B <-->|Load Occurrence + Script Version| C[(Database)]
+    B -->|Dispatch Processing Job| C[Lyra<br/>Response Evaluation Agent]
 
-    B -->|Dispatch Processing Job| D[Lyra<br/>Response Evaluation Agent]
+    C -->|... N Evaluation Reports ...| D[Evalo<br/>Final Reconciliation Agent]
 
-    D -->|... N Evaluation Reports ...| E[Evalo<br/>Final Reconciliation Agent]
-
-    E -->|Final Output Artifact Contract| F[(Persist Output)]
-    F --> G[Return API Response]
+    D -->|Final Output Artifact Contract| E[(Persist Output)]
+    E --> F[Return API Response]
 ```
 
 ### 4. Inter-Agent Contracts
@@ -267,18 +198,19 @@ These constraints are expected to evolve in future versions.
 
 ### **2. Script Versioning**
 
-- Scripts contain a numeric **Version** attribute.
-- Any structural or evaluative change to a script or its blocks requires version incrementing.
-- Occurrences always reference the exact script version used during execution.
+- No script versioning will be implemented in the MVP
+- Scripts are immutable once created
 
 ### **3. Occurrence Lifecycle**
 
 Occurrences follow a simplified lifecycle model:
 
-- **CREATED** — Occurrence exists and transcript may be attached.
-- **COMPLETED** — Transcript has been processed and output artifact has been generated.
+- **CREATED** — Occurrence exists but no transcription has been attached yet.
+- **READY** — Transcription has been attached to the occurrence.
+- **PROCESSING** — Output artifact is being generated.
+- **COMPLETED** — Output artifact has been generated.
 
-No intermediate or failure states are modeled in MVP.
+No failure states are modeled in MVP.
 
 ### **4. Transcript as Source of Truth**
 
